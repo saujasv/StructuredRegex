@@ -1,8 +1,8 @@
 import os
-from base import tok, is_valid
+from .base import tok, is_valid
 from os.path import join
-from regex_io import build_func_from_str, read_tsv_file
-from template import InfSeperatedField
+from .regex_io import build_func_from_str, read_tsv_file
+from .template import InfSeperatedField
 import subprocess
 import random
 # REGEX_TYPES = ["uns", "cat", "sep"]
@@ -28,7 +28,7 @@ def prepare_pos_examples():
 
 def gen_random_examples(regex, num_keep=NUM_KEEP, num_gen=NUM_TRYIED):
     out = subprocess.check_output(
-        ['java', '-cp', './external/jars/datagen.jar:./external/lib/*', '-ea', 'datagen.Main', 'example',
+        ['java', '-cp', 'StructuredRegex/toolkit/external/jars/datagen.jar:StructuredRegex/toolkit/external/lib/*', '-ea', 'datagen.Main', 'example',
             str(num_gen), regex])
     out = out.decode("utf-8")
     lines = out.split("\n")
@@ -44,22 +44,22 @@ def gen_random_examples(regex, num_keep=NUM_KEEP, num_gen=NUM_TRYIED):
     exs = pos_exs + neg_exs
     return exs
 
-def gen_pos_examples(regex, num_gen=NUM_TRYIED, is_spec=False):
+def gen_pos_examples(regex, num_gen=NUM_TRYIED, is_spec=False, jar_lib_dir="./external"):
     # try:
     if not is_spec:
         regex = regex.specification()
     print("Gen", regex)
     out = subprocess.check_output(
-        ['java', '-cp', './external/jars/datagen.jar:./external/lib/*', '-ea', 'datagen.Main', 'example',
+        ['java', '-cp', f"{join(jar_lib_dir, 'jars', 'datagen.jar')}:{join(jar_lib_dir, 'lib', '*')}", '-ea', 'datagen.Main', 'example',
             str(num_gen), regex])
     out = out.decode("utf-8")
     return parse_examples(out)
 
-def match_spec_example(regex, example):
+def match_spec_example(regex, example, jar_lib_dir="./external"):
     # try:
     print("Match", regex, example)
     out = subprocess.check_output(
-        ['java', '-cp', './external/jars/datagen.jar:./external/lib/*', '-ea', 'datagen.Main', 'evaluate',
+        ['java', '-cp', f"{join(jar_lib_dir, 'jars', 'datagen.jar')}:{join(jar_lib_dir, 'lib', '*')}", '-ea', 'datagen.Main', 'evaluate',
             regex, example])
     out = out.decode("utf-8")
     out = out.rstrip()
@@ -85,9 +85,9 @@ def parse_examples(exs_out):
     fields = [x[0] for x in fields if x[1] == "+"]
     return fields
 
-def gen_examples_file(filename, regex):
+def gen_examples_file(filename, regex, jar_lib_dir="./external"):
     out = subprocess.check_output(
-        ['java', '-cp', './external/jars/datagen.jar:./external/lib/*', '-ea', 'datagen.Main', 'example',
+        ['java', '-cp', f"{join(jar_lib_dir, 'jars', 'datagen.jar')}:{join(jar_lib_dir, 'lib', '*')}", '-ea', 'datagen.Main', 'example',
             str(NUM_TRYIED), regex])
     exs_out = out.decode("utf-8")
     

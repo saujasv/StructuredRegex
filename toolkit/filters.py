@@ -1,18 +1,19 @@
-from base import *
-from template import *
+from .base import *
+from .template import *
 from functools import reduce
 import subprocess
-from prepare_regex_data import gen_pos_examples
+import os
+from .prepare_regex_data import gen_pos_examples
 
 
-def filter_regexes(regexes):
-    regexes = [(x[1],print("Is Valiid", x[0],len(regexes)))[0] for x in enumerate(regexes) if is_valid(x[1])]
-    regexes = [(x[1],print("Is Good", x[0],len(regexes)))[0] for x in enumerate(regexes) if is_good(x[1])]
-    regexes = [(x[1],print("Is Diverse", x[0],len(regexes)))[0] for x in enumerate(regexes) if is_diverse(x[1])]
+def filter_regexes(regexes, jar_lib_dir="./external"):
+    regexes = [x[1] for x in enumerate(regexes) if is_valid(x[1])]
+    regexes = [x[1] for x in enumerate(regexes) if is_good(x[1])]
+    regexes = [x[1] for x in enumerate(regexes) if is_diverse(x[1], jar_lib_dir)]
     return regexes
 
-def is_diverse(node):
-    pos_exs = gen_pos_examples(node, 100)
+def is_diverse(node, jar_lib_dir="./external"):
+    pos_exs = gen_pos_examples(node, 100, jar_lib_dir=jar_lib_dir)
     num_pos = len(set(pos_exs))
     return num_pos > 10
 
@@ -37,8 +38,9 @@ def is_good(node):
             return False
     
     if isinstance(node, AndComp):
-        if not check_and_type(node):
-            return False
+        return False
+        # if not check_and_type(node):
+        #     return False
 
     if isinstance(node, UnstructuredField):
         if not check_uns_type(node):
@@ -154,13 +156,15 @@ def check_uns_type(node):
     return True
 
 
-def check_equiv(spec0, spec1):
-    # try:
-    out = subprocess.check_output(
-        ['java', '-cp', './external/jars/datagen.jar:./external/lib/*', '-ea', 'datagen.Main', 'equiv',
-            spec0, spec1], stderr=subprocess.DEVNULL)
-    out = out.decode("utf-8")
-    out = out.rstrip()
-    return out
+def check_equiv(spec0, spec1, jar_lib_dir="./external"):
+    try:
+        out = subprocess.check_output(
+            ['java', '-cp', f"{os.path.join(jar_lib_dir, 'jars', 'datagen.jar')}:{os.path.join(jar_lib_dir, 'lib', '*')}", '-ea', 'datagen.Main', 'equiv',
+                spec0, spec1], stderr=subprocess.DEVNULL)
+        out = out.decode("utf-8")
+        out = out.rstrip()
+        return out
+    except:
+        return "true"
 
     

@@ -1,5 +1,5 @@
-from base import *
-from constraints import *
+from .base import *
+from .constraints import *
 import random
 
 

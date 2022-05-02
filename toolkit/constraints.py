@@ -1,4 +1,4 @@
-from base import *
+from .base import *
 
 CC = [NumToken, LetterToken, CapitalToken, LowerToken, SpecialToken]
 CC_NO_SPEC = [NumToken, LetterToken, CapitalToken, LowerToken]

@@ -1,3 +1,5 @@
+import re
+
 def tokenize_specification(x):
     y = []
     while len(x) > 0:
@@ -45,46 +47,51 @@ def _parse_spec_toks_to_ast(tokens, cursor):
     cur_tok = tokens[cursor]
     # unary operator
     if cur_tok in ['not', 'notcc', 'star', 'optional', 'startwith', 'endwith', 'contain']:
-        assert tokens[cursor + 1] == '('
+        assert tokens[cursor + 1] == '(', f"Cursor = {cursor}, token = {tokens[cursor]}"
         child, cursor = _parse_spec_toks_to_ast(tokens, cursor + 2)
-        assert tokens[cursor] == ')'
+        assert tokens[cursor] == ')', f"Cursor = {cursor}, token = {tokens[cursor]}"
         cursor += 1
         node = StRegNode(cur_tok, [child])
     elif cur_tok in ['and', 'or', 'concat']:
-        assert tokens[cursor + 1] == '('
+        assert tokens[cursor + 1] == '(', f"Cursor = {cursor}, token = {tokens[cursor]}"
         left_child, cursor = _parse_spec_toks_to_ast(tokens, cursor + 2)
-        assert tokens[cursor] == ','
+        assert tokens[cursor] == ',', f"Cursor = {cursor}, token = {tokens[cursor]}, token = {tokens[cursor]}"
         right_child, cursor = _parse_spec_toks_to_ast(tokens, cursor + 1)
-        assert tokens[cursor] == ')'
+        assert tokens[cursor] == ')', f"Cursor = {cursor}, token = {tokens[cursor]}"
         cursor += 1
         node = StRegNode(cur_tok, [left_child, right_child])
     elif cur_tok in ['repeat', 'repeatatleast']:
-        assert tokens[cursor + 1] == '('
+        assert tokens[cursor + 1] == '(', f"Cursor = {cursor}, token = {tokens[cursor]}"
         child, cursor = _parse_spec_toks_to_ast(tokens, cursor + 2)
-        assert tokens[cursor] == ','
-        assert tokens[cursor + 1].isdigit()
+        assert tokens[cursor] == ',', f"Cursor = {cursor}, token = {tokens[cursor]}"
+        assert tokens[cursor + 1].isdigit(), f"Cursor = {cursor}, token = {tokens[cursor]}"
         int_val = int(tokens[cursor + 1])
-        assert tokens[cursor + 2] == ')'
+        assert tokens[cursor + 2] == ')', f"Cursor = {cursor}, token = {tokens[cursor]}"
         cursor = cursor + 3
         node = StRegNode(cur_tok, [child], [int_val])
     elif cur_tok in ['repeatrange']:
-        assert tokens[cursor + 1] == '('
+        assert tokens[cursor + 1] == '(', f"Cursor = {cursor}, token = {tokens[cursor]}"
         child, cursor = _parse_spec_toks_to_ast(tokens, cursor + 2)
-        assert tokens[cursor] == ','
-        assert tokens[cursor + 1].isdigit()
+        assert tokens[cursor] == ',', f"Cursor = {cursor}, token = {tokens[cursor]}"
+        assert tokens[cursor + 1].isdigit(), f"Cursor = {cursor}, token = {tokens[cursor]}"
         int_val1 = int(tokens[cursor + 1])
-        assert tokens[cursor + 2] == ','
-        assert tokens[cursor + 3].isdigit()
+        assert tokens[cursor + 2] == ',', f"Cursor = {cursor}, token = {tokens[cursor]}"
+        assert tokens[cursor + 3].isdigit(), f"Cursor = {cursor}, token = {tokens[cursor]}"
         int_val2 = int(tokens[cursor + 3])
         cursor = cursor + 4
+        assert tokens[cursor] == ')', f"Cursor = {cursor}, token = {tokens[cursor]}"
+        cursor += 1
         node = StRegNode(cur_tok, [child], [int_val1, int_val2])
     elif cur_tok.startswith('<') and cur_tok.endswith('>'):
         cursor += 1
         node = StRegNode(cur_tok)
     # not really a valid ast, need to be replaced with real const
     elif cur_tok.startswith('const'):
+        assert tokens[cursor + 1] == '(', f"Cursor = {cursor}, token = {tokens[cursor]}"
+        child, cursor = _parse_spec_toks_to_ast(tokens, cursor + 2)
+        assert tokens[cursor] == ')', f"Cursor = {cursor}, token = {tokens[cursor]}"
         cursor += 1
-        node = StRegNode(cur_tok)
+        node = StRegNode(cur_tok, [child])
     else:
         raise RuntimeError('Not parsable', cur_tok)
     return node, cursor
@@ -148,12 +155,32 @@ class StRegNode:
             return '[A-Za-z]'
         elif self.node_class == '<num>':
             return '[0-9]'
+        elif self.node_class == '<low>':
+            return '[a-z]'
+        elif self.node_class == '<cap>':
+            return '[A-Z]'
         elif self.node_class == 'concat':
-            return '(%s)(%s)' % (self.children[0].standard_regex(), self.children[1].standard_regex())
-        elif self.node_class == 'contain':
-            return '.*(%s).*' % (self.children[0].standard_regex())
+            return '%s%s' % (self.children[0].standard_regex(), self.children[1].standard_regex())
         elif self.node_class == 'repeatatleast':
             return '(%s){%d,}' % (self.children[0].standard_regex(), self.params[0])
+        elif self.node_class == 'repeat':
+            return '(%s){%d}' % (self.children[0].standard_regex(), self.params[0])
+        elif self.node_class == 'repeatrange':
+            return '(%s){%d,%d}' % (self.children[0].standard_regex(), *self.params)
+        elif self.node_class == 'optional':
+            return '(%s)?' % (self.children[0].standard_regex())
+        elif self.node_class == 'star':
+            return '(%s)?' % (self.children[0].standard_regex())
+        elif self.node_class == 'or':
+            return '(%s|%s)' % (self.children[0].standard_regex(), self.children[1].standard_regex())
+        elif self.node_class == 'const':
+            return '%s' % (self.children[0].standard_regex())
+        elif self.node_class.startswith('<') and self.node_class.endswith('>'):
+            return re.escape(self.node_class[1:-1])
+        elif self.node_class == "notcc":
+            cc = self.children[0].standard_regex()
+            return '[^' + re.escape(cc[1:-1]) + ']'
+        elif self.node_class != 'and':
+            raise NotImplementedError(f'Please fill in {self.node_class}')
         else:
-            # add code for parsing other terminals and operators
-            raise NotImplementedError('Please fill in')
+            raise ValueError

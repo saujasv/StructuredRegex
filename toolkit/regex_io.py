@@ -1,6 +1,6 @@
-from base import *
-from template import *
-from constraints import *
+from .base import *
+from .template import *
+from .constraints import *
 import csv
 import sys
 
