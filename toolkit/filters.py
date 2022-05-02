@@ -67,6 +67,8 @@ def check_cat_type(node):
     flat_children = []
     for c in node.children:
         if isinstance(c, OptionalCons):
+            if len(c.children) == 0:
+                return False
             if isinstance(c.children[0], ConcatComp):
                 flat_children.extend(c.children[0].children)
             else:
