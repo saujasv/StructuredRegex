@@ -19,7 +19,7 @@ def prepare_pos_examples():
         # with open(join(pr))
         examples = []
         for i, x in enumerate(regexes):
-            print(t, i)
+            # print(t, i)
             examples.append(gen_examples(x[1]))
         # examples = [gen_examples(x) for x in regexes]
         examples_lines = ["\t".join(x) for x in examples]
@@ -48,7 +48,7 @@ def gen_pos_examples(regex, num_gen=NUM_TRYIED, is_spec=False, jar_lib_dir="./ex
     # try:
     if not is_spec:
         regex = regex.specification()
-    print("Gen", regex)
+    # print("Gen", regex)
     out = subprocess.check_output(
         ['java', '-cp', f"{join(jar_lib_dir, 'jars', 'datagen.jar')}:{join(jar_lib_dir, 'lib', '*')}", '-ea', 'datagen.Main', 'example',
             str(num_gen), regex])

@@ -305,10 +305,10 @@ class SeperatedField(Function):
             # num_related_fileds = 3
             if num_related_fileds == 1:
                 # three completely unrelated stuff
-                print("unrelated")
+                # print("unrelated")
                 sep_fields = cls.gen_seprated_unrelated_fields()
             elif num_related_fileds == 2:
-                print("two related")
+                # print("two related")
                 # two related, one I don't care
                 sep_fields = cls.generate_related_fileds(2) # I'm done, leave blank
                 # filed_type = random.choice([SimpleUnstructuredField, SimpleConcatenationField])
@@ -319,7 +319,7 @@ class SeperatedField(Function):
                 else:
                     sep_fields =  [leftout_one] + sep_fields
             elif num_related_fileds == 3:
-                print("all related")
+                # print("all related")
                 sep_fields = cls.generate_related_fileds(3)
     
         SpecialToken.restore()

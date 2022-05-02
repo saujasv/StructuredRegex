@@ -26,7 +26,7 @@ def gen_pilot_template():
     sep_regexes = [SeperatedField.generate() for _ in range(350)]
     # print("uns", len(uns_regexes))
     # print("cat", len(cat_regexes))
-    print("sep", len(sep_regexes))
+    # print("sep", len(sep_regexes))
 
     # do filtering
     # uns_regexes = filter_regexes(uns_regexes)
@@ -35,7 +35,7 @@ def gen_pilot_template():
 
     # print("uns", len(uns_regexes))
     # print("cat", len(cat_regexes))
-    print("sep", len(sep_regexes))
+    # print("sep", len(sep_regexes))
 
     posted_regexes = get_posted_regexes()
     posted_forms = [x.logical_form() for x in posted_regexes]

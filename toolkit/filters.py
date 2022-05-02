@@ -110,8 +110,8 @@ def check_uns_type(node):
     
     max_complexity = 3 if isinstance(node, SimpleUnstructuredField) else 6
     if complexity > max_complexity:
-        print("Complexity ({}|{}) Filter".format(complexity, max_complexity))
-        print(node.description())
+        # print("Complexity ({}|{}) Filter".format(complexity, max_complexity))
+        # print(node.description())
         return False
 
     # check compabality
@@ -142,8 +142,8 @@ def check_uns_type(node):
             banned_tok = nc_cons.children[0].logical_form()
             for tok in composed_by_cons.children:
                 if banned_tok == tok.logical_form():
-                    print("Semantic Filter")
-                    print(node.description())
+                    # print("Semantic Filter")
+                    # print(node.description())
                     return False
 
     if len(cons) >= 2:
@@ -151,8 +151,8 @@ def check_uns_type(node):
         for i in range(len(cons)):
             reduced_spec = AndComp.and_type_specification(cons[:i] + cons[i + 1:])
             if check_equiv(origin_spec, reduced_spec) == "true":
-                print("Redundancy Filter")
-                print(node.description())
+                # print("Redundancy Filter")
+                # print(node.description())
                 return False
     
     return True
