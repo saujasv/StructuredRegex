@@ -150,37 +150,75 @@ class StRegNode:
             return [self.node_class]
     
     # some operators can't be converted: not, and
-    def standard_regex(self):
+    def _standard_regex(self):
         if self.node_class == '<let>':
-            return '[A-Za-z]'
+            return '[A-Za-z]', "cc"
         elif self.node_class == '<num>':
-            return '[0-9]'
+            return '[0-9]', "cc"
         elif self.node_class == '<low>':
-            return '[a-z]'
+            return '[a-z]', "cc"
         elif self.node_class == '<cap>':
-            return '[A-Z]'
+            return '[A-Z]', "cc"
         elif self.node_class == 'concat':
-            return '%s%s' % (self.children[0].standard_regex(), self.children[1].standard_regex())
+            l, l_type = self.children[0]._standard_regex()
+            r, r_type = self.children[1]._standard_regex()
+            return '%s%s' % (l, r), "concat"
         elif self.node_class == 'repeatatleast':
-            return '(%s){%d,}' % (self.children[0].standard_regex(), self.params[0])
+            c, c_type = self.children[0]._standard_regex()
+            if c_type in ["concat", "repeat", "optional", "star"]:
+                c = f"({c})"
+            elif c_type == "const":
+                if len(c) > 1:
+                    c = f"({c})"
+            return '%s{%d,}' % (c, self.params[0]), "repeat"
         elif self.node_class == 'repeat':
-            return '(%s){%d}' % (self.children[0].standard_regex(), self.params[0])
+            c, c_type = self.children[0]._standard_regex()
+            if c_type in ["concat", "repeat", "optional", "star"]:
+                c = f"({c})"
+            elif c_type == "const":
+                if len(c) > 1:
+                    c = f"({c})"
+            return '%s{%d}' % (c, self.params[0]), "repeat"
         elif self.node_class == 'repeatrange':
-            return '(%s){%d,%d}' % (self.children[0].standard_regex(), *self.params)
+            c, c_type = self.children[0]._standard_regex()
+            if c_type in ["concat", "repeat", "optional", "star"]:
+                c = f"({c})"
+            elif c_type == "const":
+                if len(c) > 1:
+                    c = f"({c})"
+            return '%s{%d,%d}' % (c, *self.params), "repeat"
         elif self.node_class == 'optional':
-            return '(%s)?' % (self.children[0].standard_regex())
+            c, c_type = self.children[0]._standard_regex()
+            if c_type in ["concat", "repeat", "optional", "star"]:
+                c = f"({c})"
+            elif c_type == "const":
+                if len(c) > 1:
+                    c = f"({c})"
+            return '%s?' % (c), "optional"
         elif self.node_class == 'star':
-            return '(%s)?' % (self.children[0].standard_regex())
+            c, c_type = self.children[0]._standard_regex()
+            if c_type in ["concat", "repeat", "optional", "star"]:
+                c = f"({c})"
+            elif c_type == "const":
+                if len(c) > 1:
+                    c = f"({c})"
+            return '%s?' % (c), "star"
         elif self.node_class == 'or':
-            return '(%s|%s)' % (self.children[0].standard_regex(), self.children[1].standard_regex())
+            l, l_type = self.children[0]._standard_regex()
+            r, r_type = self.children[1]._standard_regex()
+            return '(%s|%s)' % (l, r), "or"
         elif self.node_class == 'const':
-            return '%s' % (self.children[0].standard_regex())
+            return '%s' % (self.children[0]._standard_regex()[0]), "const"
         elif self.node_class.startswith('<') and self.node_class.endswith('>'):
-            return re.escape(self.node_class[1:-1])
+            return re.escape(self.node_class[1:-1]), "const"
         elif self.node_class == "notcc":
-            cc = self.children[0].standard_regex()
-            return '[^' + re.escape(cc[1:-1]) + ']'
+            cc, _ = self.children[0]._standard_regex()
+            return '[^' + re.escape(cc[1:-1]) + ']', "cc"
         elif self.node_class != 'and':
             raise NotImplementedError(f'Please fill in {self.node_class}')
         else:
             raise ValueError
+    
+    def standard_regex(self):
+        rx, _ = self._standard_regex()
+        return rx
