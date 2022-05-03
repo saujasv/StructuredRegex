@@ -213,7 +213,7 @@ class StRegNode:
             return re.escape(self.node_class[1:-1]), "const"
         elif self.node_class == "notcc":
             cc, _ = self.children[0]._standard_regex()
-            return '[^' + re.escape(cc[1:-1]) + ']', "cc"
+            return '[^' + cc[1:-1] + ']', "cc"
         elif self.node_class != 'and':
             raise NotImplementedError(f'Please fill in {self.node_class}')
         else:
