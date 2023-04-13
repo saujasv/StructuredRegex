@@ -1,7 +1,7 @@
 from .base import *
 from .constraints import *
 import random
-
+import logging
 
 class UnstructuredField(Function):
     def logical_form(self):
@@ -305,10 +305,10 @@ class SeperatedField(Function):
             # num_related_fileds = 3
             if num_related_fileds == 1:
                 # three completely unrelated stuff
-                print("unrelated")
+                logging.info("unrelated")
                 sep_fields = cls.gen_seprated_unrelated_fields()
             elif num_related_fileds == 2:
-                print("two related")
+                logging.info("two related")
                 # two related, one I don't care
                 sep_fields = cls.generate_related_fileds(2) # I'm done, leave blank
                 # filed_type = random.choice([SimpleUnstructuredField, SimpleConcatenationField])
@@ -319,7 +319,7 @@ class SeperatedField(Function):
                 else:
                     sep_fields =  [leftout_one] + sep_fields
             elif num_related_fileds == 3:
-                print("all related")
+                logging.info("all related")
                 sep_fields = cls.generate_related_fileds(3)
     
         SpecialToken.restore()
@@ -541,7 +541,9 @@ class ConcatenationField(Function):
 
     @classmethod
     def generate(cls, MAX_COMP):
-        num_components = weighted_random_decision([2,3,4,5,6], [1.75, 1.5, 1.25, 1.13, 1.12])
+        # num_components = weighted_random_decision([2,3,4,5,6], [1.75, 1.5, 1.25, 1.13, 1.12])
+        # num_components = weighted_random_decision([2,3,4,5,6], [1.75, 1.25, 0.75, 0.25, 0.1])
+        num_components = weighted_random_decision([2,3,4,5,6], [2, 1.25, 0.5, 0.125, 0.1])
         if num_components < 3:
             components = cls.gen_randomly_concated_components(num_components)
         else:

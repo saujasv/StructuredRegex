@@ -3,6 +3,8 @@ from .template import *
 from functools import reduce
 import subprocess
 import os
+import logging
+
 from .prepare_regex_data import gen_pos_examples
 
 
@@ -67,10 +69,13 @@ def check_cat_type(node):
     flat_children = []
     for c in node.children:
         if isinstance(c, OptionalCons):
-            if isinstance(c.children[0], ConcatComp):
-                flat_children.extend(c.children[0].children)
+            if len(c.children) == 0:
+                continue
             else:
-                flat_children.append(c.children[0])
+                if isinstance(c.children[0], ConcatComp):
+                    flat_children.extend(c.children[0].children)
+                else:
+                    flat_children.append(c.children[0])
         else:
             flat_children.append(c)
     terminals = [extract_terminal(x) for x in flat_children]
@@ -108,8 +113,8 @@ def check_uns_type(node):
     
     max_complexity = 3 if isinstance(node, SimpleUnstructuredField) else 6
     if complexity > max_complexity:
-        print("Complexity ({}|{}) Filter".format(complexity, max_complexity))
-        print(node.description())
+        logging.info("Complexity ({}|{}) Filter".format(complexity, max_complexity))
+        logging.info(node.description())
         return False
 
     # check compabality
@@ -140,8 +145,8 @@ def check_uns_type(node):
             banned_tok = nc_cons.children[0].logical_form()
             for tok in composed_by_cons.children:
                 if banned_tok == tok.logical_form():
-                    print("Semantic Filter")
-                    print(node.description())
+                    logging.info("Semantic Filter")
+                    logging.info(node.description())
                     return False
 
     if len(cons) >= 2:
@@ -149,8 +154,8 @@ def check_uns_type(node):
         for i in range(len(cons)):
             reduced_spec = AndComp.and_type_specification(cons[:i] + cons[i + 1:])
             if check_equiv(origin_spec, reduced_spec) == "true":
-                print("Redundancy Filter")
-                print(node.description())
+                logging.info("Redundancy Filter")
+                logging.info(node.description())
                 return False
     
     return True

@@ -9,6 +9,7 @@ from constraints import ComposedByCons
 from filters import *
 from os.path import join
 from regex_io import read_tsv_file, build_func_from_str
+import logging
 
 def get_posted_regexes():
     posted_batches = [1, 2]
@@ -26,7 +27,7 @@ def gen_pilot_template():
     sep_regexes = [SeperatedField.generate() for _ in range(350)]
     # print("uns", len(uns_regexes))
     # print("cat", len(cat_regexes))
-    print("sep", len(sep_regexes))
+    logging.info("sep", len(sep_regexes))
 
     # do filtering
     # uns_regexes = filter_regexes(uns_regexes)
@@ -35,7 +36,7 @@ def gen_pilot_template():
 
     # print("uns", len(uns_regexes))
     # print("cat", len(cat_regexes))
-    print("sep", len(sep_regexes))
+    logging.info("sep", len(sep_regexes))
 
     posted_regexes = get_posted_regexes()
     posted_forms = [x.logical_form() for x in posted_regexes]

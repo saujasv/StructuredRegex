@@ -148,38 +148,55 @@ class StRegNode:
             return toks
         else:
             return [self.node_class]
+        
+    def standard_regex(self):
+        return self.__standard_regex()[0]
     
     # some operators can't be converted: not, and
-    def standard_regex(self):
+    def __standard_regex(self):
         if self.node_class == '<let>':
-            return '[A-Za-z]'
+            return '[A-Za-z]', True
         elif self.node_class == '<num>':
-            return '[0-9]'
+            return '[0-9]', True
         elif self.node_class == '<low>':
-            return '[a-z]'
+            return '[a-z]', True
         elif self.node_class == '<cap>':
-            return '[A-Z]'
+            return '[A-Z]', True
         elif self.node_class == 'concat':
-            return '%s%s' % (self.children[0].standard_regex(), self.children[1].standard_regex())
+            return '%s%s' % (self.children[0].__standard_regex()[0], self.children[1].__standard_regex()[0]), False
         elif self.node_class == 'repeatatleast':
-            return '(%s){%d,}' % (self.children[0].standard_regex(), self.params[0])
+            child, is_simple = self.children[0].__standard_regex()
+            return '%s{%d,}' % (child if is_simple else f"({child})", self.params[0]), False
         elif self.node_class == 'repeat':
-            return '(%s){%d}' % (self.children[0].standard_regex(), self.params[0])
+            child, is_simple = self.children[0].__standard_regex()
+            return '%s{%d}' % (child if is_simple else f"({child})", self.params[0]), False
         elif self.node_class == 'repeatrange':
-            return '(%s){%d,%d}' % (self.children[0].standard_regex(), *self.params)
+            child, is_simple = self.children[0].__standard_regex()
+            return '%s{%d,%d}' % (child if is_simple else f"({child})", *self.params), False
         elif self.node_class == 'optional':
-            return '(%s)?' % (self.children[0].standard_regex())
+            child, is_simple = self.children[0].__standard_regex()
+            return '%s?' % (child if is_simple else f"({child})"), False
         elif self.node_class == 'star':
-            return '(%s)?' % (self.children[0].standard_regex())
+            child, is_simple = self.children[0].__standard_regex()
+            return '%s?' % (child if is_simple else f"({child})"), False
         elif self.node_class == 'or':
-            return '(%s|%s)' % (self.children[0].standard_regex(), self.children[1].standard_regex())
+            return '(%s|%s)' % (self.children[0].__standard_regex()[0], self.children[1].__standard_regex()[0]), True
         elif self.node_class == 'const':
-            return '%s' % (self.children[0].standard_regex())
-        elif self.node_class.startswith('<') and self.node_class.endswith('>'):
-            return re.escape(self.node_class[1:-1])
+            return '%s' % (self.children[0].__standard_regex()), True
         elif self.node_class == "notcc":
-            cc = self.children[0].standard_regex()
-            return '[^' + re.escape(cc[1:-1]) + ']'
+            if self.children[0].node_class == '<let>':
+                return '[^A-Za-z]', True
+            elif self.children[0].node_class == '<num>':
+                return '[^0-9]', True
+            elif self.children[0].node_class == '<low>':
+                return '[^a-z]', True
+            elif self.children[0].node_class == '<cap>':
+                return '[^A-Z]', True
+            else:
+                cc, _ = self.children[0].__standard_regex()
+                return '[^' + re.escape(cc[1:-1]) + ']', True
+        elif self.node_class.startswith('<') and self.node_class.endswith('>'):
+            return re.escape(self.node_class[1:-1]), True
         elif self.node_class != 'and':
             raise NotImplementedError(f'Please fill in {self.node_class}')
         else:

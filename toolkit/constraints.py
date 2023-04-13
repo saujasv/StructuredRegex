@@ -1,4 +1,5 @@
 from .base import *
+import logging
 
 CC = [NumToken, LetterToken, CapitalToken, LowerToken, SpecialToken]
 CC_NO_SPEC = [NumToken, LetterToken, CapitalToken, LowerToken]
@@ -479,16 +480,16 @@ class FieldHelper:
             if self.allowed and (LetterToken in cc_candidates):
                 cc_candidates.append(CapitalToken)
                 cc_candidates.append(LowerToken)
-        print(cc_candidates)
+        logging.info(cc_candidates)
         tok1 = random.choice(cc_candidates)
-        print(tok1)
+        logging.info(tok1)
         soft_remove(cc_candidates, tok1)
         if tok1 == LetterToken:
             soft_remove(cc_candidates, CapitalToken)        
             soft_remove(cc_candidates, LowerToken)
         if tok1 == CapitalToken or tok1 == LowerToken:
             soft_remove(cc_candidates, LetterToken)
-        print(cc_candidates)
+        logging.info(cc_candidates)
         tok2 = random.choice(cc_candidates)
 
         return tok1(), tok2()

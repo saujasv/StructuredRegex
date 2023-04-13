@@ -3,6 +3,7 @@ from .template import *
 from .constraints import *
 import csv
 import sys
+import logging
 
 def str_to_class(str):
     return getattr(sys.modules[__name__], str)
@@ -118,7 +119,7 @@ def build_ast_from_toks(toks, cur):
         else:
             node_class = head
             cur = cur + 1
-    print(cur, node_class, children, params)
+    logging.info(cur, node_class, children, params)
 
 def build_dataset_ast_from_toks(toks, cur):
     node_class = None
@@ -147,7 +148,7 @@ def build_dataset_ast_from_toks(toks, cur):
         else:
             node_class = head
             cur = cur + 1
-    print(cur, node_class, children, params)
+    logging.info(cur, node_class, children, params)
 
 def read_tsv_file(filename, delimiter="\t"):
     with open(filename) as f:
@@ -181,7 +182,7 @@ def read_result(filename):
     with open(filename) as csv_file:
         csv_reader = csv.reader(csv_file, delimiter=',')
         header = next(csv_reader)
-        print(header)
+        logging.info(header)
         # exit()
         return [row_to_record(x, header) for x in csv_reader]
 

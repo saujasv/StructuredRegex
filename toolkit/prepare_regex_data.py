@@ -5,6 +5,8 @@ from .regex_io import build_func_from_str, read_tsv_file
 from .template import InfSeperatedField
 import subprocess
 import random
+import logging
+
 # REGEX_TYPES = ["uns", "cat", "sep"]
 REGEX_TYPES = ["uns", "cat", "sep"]
 RAW_DIR = "regexes-raw"
@@ -19,7 +21,7 @@ def prepare_pos_examples():
         # with open(join(pr))
         examples = []
         for i, x in enumerate(regexes):
-            print(t, i)
+            logging.info(t, i)
             examples.append(gen_examples(x[1]))
         # examples = [gen_examples(x) for x in regexes]
         examples_lines = ["\t".join(x) for x in examples]
@@ -48,7 +50,7 @@ def gen_pos_examples(regex, num_gen=NUM_TRYIED, is_spec=False, jar_lib_dir="./ex
     # try:
     if not is_spec:
         regex = regex.specification()
-    print("Gen", regex)
+    logging.info("Gen", regex)
     out = subprocess.check_output(
         ['java', '-cp', f"{join(jar_lib_dir, 'jars', 'datagen.jar')}:{join(jar_lib_dir, 'lib', '*')}", '-ea', 'datagen.Main', 'example',
             str(num_gen), regex])
@@ -57,7 +59,7 @@ def gen_pos_examples(regex, num_gen=NUM_TRYIED, is_spec=False, jar_lib_dir="./ex
 
 def match_spec_example(regex, example, jar_lib_dir="./external"):
     # try:
-    print("Match", regex, example)
+    logging.info("Match", regex, example)
     out = subprocess.check_output(
         ['java', '-cp', f"{join(jar_lib_dir, 'jars', 'datagen.jar')}:{join(jar_lib_dir, 'lib', '*')}", '-ea', 'datagen.Main', 'evaluate',
             regex, example])
@@ -115,7 +117,7 @@ def make_examples_file(filename, regex, pos_exs, neg_exs):
     gt = regex.ground_truth()
     match_results = [match_spec_example(spec, x) for x in neg_lines]
     neg_lines = [x[0] for x in zip(neg_lines, match_results) if x[1] == "false"]
-    print("before:", len(neg_exs), "after:", len(neg_lines))
+    logging.info("before:", len(neg_exs), "after:", len(neg_lines))
     neg_lines = ['"{}",-'.format(x) for x in neg_lines]
 
     lines = ["// examples"] + pos_lines + neg_lines + ["", "// gt", gt]
@@ -167,9 +169,9 @@ def prepare_data():
     data_regexes = []
     for regexes, pos_exs, num_tgt in zip(regexes_by_type, pos_examples_by_type, tgt_num_by_type):
         reg_ex_pairs = list(zip(regexes, pos_exs))
-        print("Len before:",len(reg_ex_pairs))
+        logging.info("Len before:",len(reg_ex_pairs))
         reg_ex_pairs = [x for x in reg_ex_pairs if len(x[1]) >= NUM_KEEP]
-        print("Len after:",len(reg_ex_pairs))
+        logging.info("Len after:",len(reg_ex_pairs))
         data_regexes.extend(reg_ex_pairs[:num_tgt])
 
     with open("pilot.txt", "w") as f:
@@ -247,7 +249,7 @@ def gen_hit_pos_exs(regex):
             if spec_pos:
                 hit_pos_exs.append(random.choice(spec_pos))
             else:
-                print(spec_r, "Not Good")
+                logging.info(spec_r, "Not Good")
     pos_exs = gen_pos_examples(regex)
     random.shuffle(pos_exs)
     hit_pos_exs.extend(pos_exs[:(NUM_KEEP - len(hit_pos_exs))])
@@ -297,7 +299,7 @@ def prepare_hits():
     # id, img_url, pos_exs, neg_exs
     csv_fields = []
     for name, r in named_regexes:
-        print(name)
+        logging.info(name)
         fields = prepare_hit_fields(name, r)
         csv_fields.append(fields)
     csv_lines = []
