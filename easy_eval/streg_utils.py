@@ -178,7 +178,7 @@ class StRegNode:
             return '%s?' % (child if is_simple else f"({child})"), False
         elif self.node_class == 'star':
             child, is_simple = self.children[0].__standard_regex()
-            return '%s?' % (child if is_simple else f"({child})"), False
+            return '%s*' % (child if is_simple else f"({child})"), False
         elif self.node_class == 'or':
             return '(%s|%s)' % (self.children[0].__standard_regex()[0], self.children[1].__standard_regex()[0]), True
         elif self.node_class == 'const':
